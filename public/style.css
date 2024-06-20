@@ -1,0 +1,13 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+    background-color: #d6baba;
+    height: auto;
+}
+
+#booksTable { 
+    margin: 40px 200px;
+    gap: 40px;
+}

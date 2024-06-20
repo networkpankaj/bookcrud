@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Management System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Book Management System</h1>
+    <form id="bookForm">
+        <input type="hidden" id="bookId">
+        <label for="author">Author:</label>
+        <input type="text" id="author" name="author" required>
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required>
+        <label for="pages">Pages:</label>
+        <input type="number" id="pages" name="pages" required>
+        <label for="publish">Publish:</label>
+        <input type="text" id="publish" name="publish" required>
+        <button type="submit">Add Book</button>
+        <button type="button" id="updateButton" style="display:none;">Update Book</button>
+    </form>
+    <table id="booksTable">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Pages</th>
+                <th>Publish</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="booksTableBody">
+        </tbody>
+    </table>
+
+    <script>
+        const form = document.getElementById('bookForm');
+        const booksTableBody = document.getElementById('booksTableBody');
+        const updateButton = document.getElementById('updateButton');
+
+        function fetchBooks() {
+            fetch('http://localhost:3000/books')
+                .then(response => response.json())
+                .then(books => {
+                    booksTableBody.innerHTML = "";
+                    books.forEach(book => {
+                        const bookRow = document.createElement('tr');
+                        bookRow.innerHTML = `
+                            <td>${book.title}</td>
+                            <td>${book.author}</td>
+                            <td>${book.pages}</td>
+                            <td>${book.publish}</td>
+                            <td>
+                                <button onclick="editBook(${book.id})">Edit</button>
+                                <button onclick="deleteBook(${book.id})">Delete</button>
+                            </td>
+                        `;
+                        booksTableBody.appendChild(bookRow);
+                    });
+                });
+        }
+
+        function addBook(e) {
+            e.preventDefault();
+            const author = document.getElementById('author').value;
+            const title = document.getElementById('title').value;
+            const pages = document.getElementById('pages').value;
+            const publish = document.getElementById('publish').value;
+
+            fetch('http://localhost:3000/books', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ author, title, pages, publish })
+            })
+            .then(response => response.json())
+            .then(newBook => {
+                fetchBooks();
+                form.reset();
+            });
+        }
+
+        function deleteBook(id) {
+            fetch(`http://localhost:3000/books/${id}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(result => {
+                fetchBooks();
+            });
+        }
+
+        function editBook(id) {
+            fetch(`http://localhost:3000/books/${id}`)
+                .then(response => response.json())
+                .then(book => {
+                    document.getElementById('bookId').value = book.id;
+                    document.getElementById('author').value = book.author;
+                    document.getElementById('title').value = book.title;
+                    document.getElementById('pages').value = book.pages;
+                    document.getElementById('publish').value = book.publish;
+
+                    form.querySelector('button[type="submit"]').style.display = 'none';
+                    updateButton.style.display = 'inline';
+                });
+        }
+
+        function updateBook() {
+            const id = document.getElementById('bookId').value;
+            const author = document.getElementById('author').value;
+            const title = document.getElementById('title').value;
+            const pages = document.getElementById('pages').value;
+            const publish = document.getElementById('publish').value;
+
+            fetch(`http://localhost:3000/books/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ author, title, pages, publish })
+            })
+            .then(response => response.json())
+            .then(updatedBook => {
+                fetchBooks();
+                form.reset();
+                form.querySelector('button[type="submit"]').style.display = 'inline';
+                updateButton.style.display = 'none';
+            });
+        }
+        form.addEventListener('submit', addBook);
+        updateButton.addEventListener('click', updateBook);
+        fetchBooks();
+    </script>
+</body>
+</html>
